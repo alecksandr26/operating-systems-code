@@ -1,0 +1,6 @@
+
+MAX_AMOUNT_OF_PROCESS = 64
+BATCH_SIZE = 4
+APP_TITLE = "Batch Processing Simulator"
+APP_GEOMETRY = "300x100"
+
