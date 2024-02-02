@@ -9,9 +9,8 @@ class Process:
     def __init__(self, name : str, process_id : int):
         self.name = name
         self.id = process_id
-        self.time = time
 
-    def set_operation(operaton_sym : str, first_operand : int, second_operand : int, execution_time : int):
+    def set_operation(self, operation_sym : str, first_operand : int, second_operand : int, execution_time : int):
         self.operation_sym = operation_sym
         self.first_operand = first_operand
         self.second_operand = second_operand

@@ -1,6 +1,9 @@
 
 MAX_AMOUNT_OF_PROCESS = 64
+MIN_AMOUNT_OF_PROCESS = 1
 BATCH_SIZE = 4
-APP_TITLE = "Batch Processing Simulator"
+APP_TITLE = "Batch Processing Simulator in Python"
 APP_GEOMETRY = "300x100"
+
+MAX_INT = 1024
 
