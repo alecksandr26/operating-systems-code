@@ -22,7 +22,7 @@ class View(Frame):
         self.title_label = Label(self, text = APP_TITLE, font = ("Arial", 25))
         self.title_label.grid(row = 1, column = 1, columnspan = 3)
 
-        __create_enter_number_processes_widget()
+        self.__create_enter_number_processes_widget()
         
         
     def __create_enter_number_processes_widget(self):
