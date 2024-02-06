@@ -73,17 +73,31 @@ class Controller(Tk):
         process_data = {}
         
         try:
+            # TODO: Check if that id alreay exist
             process_data["name"] = self.view.entry_name.get()
+            process_data["id"] = self.view.entry_id.get()
+            for pro in self.get_processes():
+                if pro.id == process_data["id"] or pro.name == process_data["name"]:
+                    raise ValueError("Name or Id is not unique")
+            
             process_data["operation_sym"] = self.view.combo_operation_sym.get()
             process_data["first_operand"] = int(self.view.spin_first_operand.get())
             process_data["second_operand"] = int(self.view.spin_second_operand.get())
-            # TODO: Check if that id alreay exist
-            process_data["id"] = self.view.entry_id.get()
             process_data["execution_time"] = int(self.view.spin_execution_time.get())
+
+            # Valid the operation
+
+            if process_data["operation_sym"] == "/" and process_data["second_operand"] == 0:
+                raise ZeroDivisionError("Can't divide by zero")
+            
         except ValueError as Error:
             messagebox.showerror("showerror", f"Invalid introduced Process: {Error}")
             return
 
+        except ZeroDivisionError as Error:
+            messagebox.showerror("showerror", f"Division by zero: {Error}")
+            return
+        
         self.save_process(process_data)
         self.view.update_widgets()
     

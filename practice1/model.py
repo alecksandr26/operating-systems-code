@@ -38,7 +38,6 @@ class Process:
             assert 0, "Invalid operation genius chrashing.... XP"
             
     def get_data(self) -> dict:
-
         data = {
             "id" : self.id,
             "name" : self.name,
