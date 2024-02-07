@@ -150,7 +150,7 @@ class AnimationView(View):
               font = ("Arial", 12)).grid(row = 3, column = 2, pady = 20)
 
         self.current_process_listbox = Treeview(self, column = ("c1", "c2"), show = "headings", height = 8)
-        self.current_process_listbox.column("# 1", anchor = CENTER)
+        self.current_process_listbox.column("# 1", anchor = CENTER, stretch=NO, width=100)
         self.current_process_listbox.heading("# 1", text = "Info")
         self.current_process_listbox.column("# 2", anchor = CENTER)
         self.current_process_listbox.heading("# 2", text = "Data")
@@ -163,16 +163,15 @@ class AnimationView(View):
 
         self.finished_processes_listbox = Treeview(self, column = ("c1", "c2", "c3"), show = "headings",
                                                    height = 8)
-
         vsb = Scrollbar(self, orient="vertical", command = self.finished_processes_listbox.yview)
         vsb.place(x = 1490, y = 180, height = 160)
         self.finished_processes_listbox.configure(yscrollcommand = vsb.set)
 
-        self.finished_processes_listbox.column("# 1", anchor = CENTER)
+        self.finished_processes_listbox.column("# 1", anchor = CENTER,stretch=NO, width=180)
         self.finished_processes_listbox.heading("# 1", text = "ID")
-        self.finished_processes_listbox.column("# 2", anchor = CENTER)
+        self.finished_processes_listbox.column("# 2", anchor = CENTER,stretch=NO, width=180)
         self.finished_processes_listbox.heading("# 2", text = "Operation")
-        self.finished_processes_listbox.column("# 3", anchor = CENTER)
+        self.finished_processes_listbox.column("# 3", anchor = CENTER,stretch=NO, width=180)
         self.finished_processes_listbox.heading("# 3", text = "Result")
         
         self.finished_processes_listbox.grid(row = 4, column = 3, rowspan = 3)
@@ -185,7 +184,7 @@ class AnimationView(View):
 
     def build_the_run_button(self):
         Button(self, text = "Run",
-               command = self.run_btn_oncliked_handler).grid(row = 8, column = 1);
+               command = self.run_btn_oncliked_handler).grid(row = 8, column = 1)
     
 
     def run_btn_oncliked_handler(self):
@@ -260,6 +259,7 @@ class AnimationView(View):
                                                                             + pro_data["operation_sym"]
                                                                             + str(pro_data["second_operand"]),
                                                                             pro_data["result"]))
+
         
     def update_counting_time(self):
         self.counting_time_label.configure(text = f"{self.controller.get_total_time()}")
