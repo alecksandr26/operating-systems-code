@@ -22,20 +22,23 @@ class Process:
 
     def do_operation(self):
         # Do the math genius
-        if self.operation_sym == "+":
-            self.result = self.first_operand + self.second_operand
-        elif self.operation_sym == "-":
-            self.result = self.first_operand - self.second_operand
-        elif self.operation_sym == "*":
-            self.result = self.first_operand * self.second_operand 
-        elif self.operation_sym == "/":
-            self.result = self.first_operand / self.second_operand
-        elif self.operation_sym == "%":
-            self.result = self.first_operand % self.second_operand
-        elif self.operation_sym == "^":
-            self.result = self.first_operand ** self.second_operand
-        else:
-            assert 0, "Invalid operation genius chrashing.... XP"
+        try:
+            if self.operation_sym == "+":
+                self.result = self.first_operand + self.second_operand
+            elif self.operation_sym == "-":
+                self.result = self.first_operand - self.second_operand
+            elif self.operation_sym == "*":
+                self.result = self.first_operand * self.second_operand 
+            elif self.operation_sym == "/":
+                self.result = self.first_operand / self.second_operand
+            elif self.operation_sym == "%":
+                self.result = self.first_operand % self.second_operand
+            elif self.operation_sym == "^":
+                self.result = self.first_operand ** self.second_operand
+            else:
+                assert 0, "Invalid operation genius chrashing.... XP"
+        except:
+            self.result = "error"
             
     def get_data(self) -> dict:
         data = {

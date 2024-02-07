@@ -76,7 +76,7 @@ class MainView(View):
         Label(self, text = "Process information: ",
               font = ("Arial", 12)).grid(row = 4, column = 1, columnspan = 2, pady = 50)
 
-        Label(self, text = "Name: ").grid(row = 5, column = 1)
+        Label(self, text = "Programmer name: ").grid(row = 5, column = 1)
         self.entry_name = Entry(self)
         self.entry_name.grid(row = 5, column = 2)
         
@@ -260,7 +260,6 @@ class AnimationView(View):
                                                                             + pro_data["operation_sym"]
                                                                             + str(pro_data["second_operand"]),
                                                                             pro_data["result"]))
-        self.refresh()
         
     def update_counting_time(self):
         self.counting_time_label.configure(text = f"{self.controller.get_total_time()}")
