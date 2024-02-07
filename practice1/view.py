@@ -93,7 +93,7 @@ class MainView(View):
         self.entry_id.grid(row = 7, column = 2)
 
         Label(self, text = "Execution time in seconds: ").grid(row = 7, column = 3)
-        self.spin_execution_time = Spinbox(self, from_ = 0, to = MAX_INT, width = 5)
+        self.spin_execution_time = Spinbox(self, from_ = MIN_AMOUNT_OF_PROCESS, to = MAX_INT, width = 5)
         self.spin_execution_time.grid(row = 7, column = 4)
         
         Button(self, text = "Add",
