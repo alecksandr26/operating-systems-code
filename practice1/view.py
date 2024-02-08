@@ -250,16 +250,18 @@ class AnimationView(View):
             finded = False
             for item in self.finished_processes_listbox.get_children():
                 item_vals = self.finished_processes_listbox.item(item)["values"]
-                if item_vals[0] == pro.id:
+                if str(item_vals[0]) == str(pro.id):
+                    print("true")
                     finded = True
             if not finded:
+                print("finded it")
                 pro_data = pro.get_data()
                 self.finished_processes_listbox.insert("", "end", values = (pro_data["id"],
                                                                             str(pro_data["first_operand"])
                                                                             + pro_data["operation_sym"]
                                                                             + str(pro_data["second_operand"]),
                                                                             pro_data["result"]))
-
+        self.refresh()
         
     def update_counting_time(self):
         self.counting_time_label.configure(text = f"{self.controller.get_total_time()}")
