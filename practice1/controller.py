@@ -9,8 +9,6 @@ from tkinter import *
 from tkinter import messagebox
 from configurations import *
 
-
-
 class Controller(Tk):
     """ The Controller where all the app is managed """
     def __init__(self):
@@ -84,7 +82,7 @@ class Controller(Tk):
             process_data["num"] = int(self.view.spin_proces_num.get())
             for pro in self.get_processes():
                 if pro.num == process_data["num"]:
-                    raise ValueError("Name or Id is not unique")
+                    raise ValueError("Number is not unique")
             process_data["operation_sym"] = self.view.combo_operation_sym.get()
             process_data["first_operand"] = int(self.view.spin_first_operand.get())
             process_data["second_operand"] = int(self.view.spin_second_operand.get())
@@ -123,9 +121,14 @@ class Controller(Tk):
     def run(self):
         """ Executes all  the processes batch by batch  """
 
+        batch_counter = 1
         # Until finshed with the pending batches
         while self.get_num_processes() > 0:
             # Load the batch
+            self.view.finished_processes_listbox.insert("", "end",
+                                                        values = (f"Batch: {batch_counter}", ))
+            batch_counter += 1
+
             i = 0
             while i < BATCH_SIZE and self.get_num_processes() > 0:
                 self.model.batch.append(self.model.processes.pop(0))

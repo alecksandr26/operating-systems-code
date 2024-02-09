@@ -157,10 +157,12 @@ class AnimationView(View):
 
     def build_num_pending_batches(self):
         """ build the label of pending batches """
-        Label(self, text = "No. Of pending batches: ",
-              font = ("Arial", 12)).grid(row = 2, column = 1, pady = 20)
-        self.n_pending_processes_label = Label(self, text = f"{self.controller.get_num_batches()}")
-        self.n_pending_processes_label.grid(row = 2, column = 2, pady = 20)
+        self.n_pending_processes_label = Label(
+            self,
+            text = f"No. Of pending batches:\t {self.controller.get_num_batches()}",
+            font = ("Arial", 12)
+        )
+        self.n_pending_processes_label.grid(row = 2, column = 1, pady = 20)
 
 
     def build_batch_listbox(self):
@@ -234,7 +236,9 @@ class AnimationView(View):
 
     def update_num_pending_batches(self):
         """ Update the pending batches """
-        self.n_pending_processes_label.configure(text = f"{self.controller.get_num_batches()}")
+        self.n_pending_processes_label.configure(
+            text = f"No. Of pending batches:\t {self.controller.get_num_batches()}"
+        )
         self.refresh()
 
     def update_batch_listbox(self):
@@ -291,12 +295,14 @@ class AnimationView(View):
                     finded = True
             if not finded:
                 pro_data = pro.get_data()
-                self.finished_processes_listbox.insert("", "end",
-                                                       values = (pro_data["num"],
-                                                                 str(pro_data["first_operand"])
-                                                                 + pro_data["operation_sym"]
-                                                                 + str(pro_data["second_operand"]),
-                                                                 pro_data["result"]))
+                self.finished_processes_listbox.insert(
+                    "", "end",
+                    values = (pro_data["num"],
+                              str(pro_data["first_operand"])
+                              + pro_data["operation_sym"]
+                              + str(pro_data["second_operand"]),
+                              pro_data["result"])
+                )
             self.refresh()
 
     def update_counting_time(self):
