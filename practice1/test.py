@@ -20,9 +20,9 @@ def generate_random_string(length):
     return random_string
 
 
-def generate_random_process() -> Process:
+def generate_random_process(num : int) -> Process:
     """ Will generate a random process"""
-    process = Process(generate_random_string(10), generate_random_string(10))
+    process = Process(generate_random_string(10), num)
     process.set_operation(random.choice(OPERATIONS), random.randint(0, MAX_INT),
                           random.randint(0, MAX_INT), random.randint(1, 5))
     return process
@@ -34,7 +34,7 @@ def main():
     controller = Controller()
 
     for i in range(1, N + 1):
-        controller.model.add_process(generate_random_process())
+        controller.model.add_process(generate_random_process(i))
 
     controller.show_view("AnimationView")
     controller.mainloop()

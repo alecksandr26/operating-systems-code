@@ -136,6 +136,7 @@ class AnimationView(View):
         self.current_process_listbox = None
         self.finished_processes_listbox = None
         self.counting_time_label = None
+        self.vsb = None
 
         # Create the rest of parts of the view
         self.build_widgets()
@@ -197,10 +198,6 @@ class AnimationView(View):
 
         self.finished_processes_listbox = Treeview(self, column = ("c1", "c2", "c3"),
                                                    show = "headings", height = 8)
-        vsb = Scrollbar(self, orient="vertical", command = self.finished_processes_listbox.yview)
-        vsb.place(x = 1490, y = 180, height = 160)
-        self.finished_processes_listbox.configure(yscrollcommand = vsb.set)
-
         self.finished_processes_listbox.column("# 1", anchor = CENTER,stretch=NO, width=180)
         self.finished_processes_listbox.heading("# 1", text = "Num")
         self.finished_processes_listbox.column("# 2", anchor = CENTER,stretch=NO, width=180)
@@ -209,12 +206,19 @@ class AnimationView(View):
         self.finished_processes_listbox.heading("# 3", text = "Result")
         self.finished_processes_listbox.grid(row = 4, column = 3, rowspan = 3)
 
+        self.vsb = Scrollbar(
+            self, orient="vertical", command = self.finished_processes_listbox.yview
+        )
+        self.vsb.place(relx=0.995, rely=0.444, anchor='center', height=160)
+        self.finished_processes_listbox.configure(yscrollcommand = self.vsb.set)
+
     def build_counting_time(self):
         """ build the counting time gui """
-        Label(self, text = "Total time: ",
-              font = ("Arial", 12)).grid(row = 7, column = 1, pady = 20)
-        self.counting_time_label = Label(self, text = f"{self.controller.get_total_time()}")
-        self.counting_time_label.grid(row = 7, column = 2)
+        self.counting_time_label = Label(
+            self, text = f"Total time:\t {self.controller.get_total_time()}",
+            font = ("Arial", 12)
+        )
+        self.counting_time_label.grid(row = 7, column = 1, pady = 20)
 
     def build_the_run_button(self):
         """ The gui of the run button """
@@ -307,5 +311,7 @@ class AnimationView(View):
 
     def update_counting_time(self):
         """ update counting time """
-        self.counting_time_label.configure(text = f"{self.controller.get_total_time()}")
+        self.counting_time_label.configure(
+            text = f"Total time:\t {self.controller.get_total_time()}"
+        )
         self.refresh()
