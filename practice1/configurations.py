@@ -1,3 +1,6 @@
+"""
+The configs of the project
+"""
 
 MAX_AMOUNT_OF_PROCESS = 64
 MIN_AMOUNT_OF_PROCESS = 1
@@ -9,6 +12,6 @@ OPERATIONS = ["+", "-", "*", "/", "%", "^"]
 MAX_INT = 100
 
 def INFO(*args):
+    """A simple function to log information"""
     formatted_msg = "[INFO]: " + ' '.join(map(str, args))
     print(formatted_msg)
-

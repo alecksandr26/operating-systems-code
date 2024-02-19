@@ -28,7 +28,7 @@ def generate_random_process(num : int) -> Process:
     return process
 
 # The amount of processes to exected
-N = 10
+N = 30
 def main():
     """ The main function """
     controller = Controller()
