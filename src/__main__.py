@@ -1,11 +1,10 @@
 """
 The main file for running the main program.
 """
-
 import sys
-from controller import Controller
+from src.controller import Controller
 
-def main():
+def main() -> int:
     """
     main: This function emulates the main c program function
     It will initialized the controller and run the other things

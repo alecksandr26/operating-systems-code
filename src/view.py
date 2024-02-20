@@ -8,8 +8,10 @@ from tkinter import messagebox
 from tkinter import *
 from tkinter.ttk import *
 
+from src.configurations import *
 
-from configurations import *
+
+
 
 
 class View(Frame):
@@ -39,6 +41,7 @@ class View(Frame):
         """ Refresh the frame """
         self.update()
         self.update_idletasks()
+
 
 class MainView(View):
     """ MainView The main menu of the application """
@@ -73,8 +76,8 @@ class MainView(View):
         Label(self, text = "No. Processes: ",
               font = ("Arial", 12)).grid(row = 2, column = 1, pady = 50)
         self.spin_amount_processes = Spinbox(self,
-                                             from_ = MIN_AMOUNT_OF_PROCESS,
-                                             to = MAX_AMOUNT_OF_PROCESS,
+                                             from_ = MIN_NUMBER_OF_PROCESS,
+                                             to = MAX_NUMBER_OF_PROCESS,
                                              width = 5)
         self.spin_amount_processes.grid(row = 2, column = 2)
 
@@ -111,7 +114,7 @@ class MainView(View):
 
         Label(self, text = "Execution time in seconds: ").grid(row = 7, column = 3)
         self.spin_execution_time = Spinbox(self,
-                                           from_ = MIN_AMOUNT_OF_PROCESS,
+                                           from_ = MIN_NUMBER_OF_PROCESS,
                                            to = MAX_INT, width = 5)
         self.spin_execution_time.grid(row = 7, column = 4)
         Button(self, text = "Add",

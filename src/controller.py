@@ -3,11 +3,13 @@ The controller which controls the Model and the View part of the app
 """
 
 from time import sleep
-from model import Model, Process
-from view import MainView, AnimationView
+
+from src.model import Model, Process
+from src.view import MainView, AnimationView
+
 from tkinter import *
 from tkinter import messagebox
-from configurations import *
+from src.configurations import *
 
 class Controller(Tk):
     """ The Controller where all the app is managed """
@@ -20,7 +22,6 @@ class Controller(Tk):
         # Create the model and view
         self.model = Model()
         self.view = None
-        self.current_process = None
         self.views = {}
         for F in (MainView, AnimationView, ):
             view_name = F.__name__
@@ -42,40 +43,38 @@ class Controller(Tk):
                               process_data["first_operand"],
                               process_data["second_operand"],
                               process_data["execution_time"])
-        self.model.add_process(process)
-
+        self.model.processes.add(process)
 
     def get_num_processes(self) -> int:
         """ get the number of processes to be executed  """
-        return self.model.get_num_processes()
+        return len(self.model.processes)
 
     def get_num_batches(self) -> int:
         """ get the number of batches """
-        return self.model.get_num_batches()
+        return self.model.processes.num_batches(self.model.batch)
 
     def get_processes(self) -> [Process]:
         """ get the list of processes """
-        return self.model.get_processes()
+        return self.model.processes
 
     def get_cur_process(self) -> Process or None:
         """ get current processes been executed """
-        return self.current_process
+        return self.model.current_process
 
     def get_batch(self) -> [Process]:
         """ get the actual batch """
-        assert len(self.model.get_batch()) <= BATCH_SIZE
-        return self.model.get_batch()
+        return self.model.batch
 
     def get_finshed_processes(self) -> [Process]:
         """ get the finished processes """
-        return self.model.get_finshed_processes()
+        return self.model.finished_processes
 
     def get_total_time(self) -> int:
         """ get the total time of the processed """
         return self.model.total_time
 
-    def add_process(self):
-        """add a new process to the list of processes."""
+    def capture_process(self):
+        """capture a new process to the list of processes."""
         process_data = {}
         try:
             process_data["name"] = self.view.entry_name.get()
@@ -121,49 +120,45 @@ class Controller(Tk):
     def run(self):
         """ Executes all  the processes batch by batch  """
 
-        batch_counter = 1
+        self.model.batch_counter = 1
         # Until finshed with the pending batches
         while self.get_num_processes() > 0:
             # Load the batch
             self.view.finished_processes_listbox.insert("", "end",
-                                                        values = (f"Batch: {batch_counter}", ))
-            batch_counter += 1
-
-            i = 0
-            while i < BATCH_SIZE and self.get_num_processes() > 0:
-                self.model.batch.append(self.model.processes.pop(0))
-                i += 1
+                                                        values = (f"Batch: {self.model.batch_counter}", ))
+            self.model.batch_counter += 1
+            self.model.processes.fill_batch(self.model.batch)
 
             self.view.update_num_pending_batches()
             self.view.update_batch_listbox()
             sleep(1)
 
             # Execute processes one by one
-            while len(self.model.batch) > 0:
-                self.current_process = self.model.batch.pop(0)
+            while not self.model.batch.empty():
+                self.model.current_process = self.model.batch.pop()
                 self.view.update_batch_listbox()
                 self.view.update_current_process_execution()
 
-                self.current_process.do_operation()
+                self.model.current_process.do_operation()
 
-                self.current_process.actual_time = 0
-                self.current_process.left_time = self.current_process.execution_time
-                while self.current_process.left_time > 0:
+                self.model.current_process.actual_time = 0
+                self.model.current_process.current_process.left_time = self.model.current_process.current_process.execution_time
+                while self.model.current_process.left_time > 0:
                     self.view.update_current_process_execution()
-                    self.current_process.actual_time += 1
-                    self.current_process.left_time -= 1
+                    self.model.current_process.actual_time += 1
+                    self.model.current_process.left_time -= 1
                     sleep(1)
 
                 self.view.update_current_process_execution()
                 sleep(1)
 
-                self.model.total_time += self.current_process.execution_time
+                self.model.total_time += self.model.current_process.execution_time
                 self.view.update_counting_time()
 
                 # Append the process to the finsihed processes
-                self.model.finished_processes.append(self.current_process)
+                self.model.finished_processes.add(self.model.current_process)
 
-                self.current_process = None
+                self.model.current_process = None
                 self.view.update_current_process_execution()
                 self.view.update_finished_list()
 
