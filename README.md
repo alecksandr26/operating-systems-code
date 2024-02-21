@@ -1,3 +1,7 @@
+# How to run
+```
+[term.]$ python -m src
+```
 
 # References
 * ¿Qué es MVC? - Aprende MVC en 10 minutos! (2021, August 27).

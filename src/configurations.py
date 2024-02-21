@@ -9,6 +9,7 @@ APP_TITLE = "Batch Processing Simulator in Python"
 APP_GEOMETRY = "300x100"
 OPERATIONS = ["+", "-", "*", "/", "%", "^"]
 MAX_INT = 100
+FONT = ("Arial", 12)
 
 def INFO(*args):
     """A simple function to log information"""

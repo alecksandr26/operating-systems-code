@@ -4,9 +4,10 @@ The controller which controls the Model and the View part of the app
 
 from time import sleep
 
-from src.model import Model, Process
+from src.model import Model, Process, Batch, ListProcesses
 from src.view import MainView, AnimationView
 
+from threading import Thread, Lock
 from tkinter import *
 from tkinter import messagebox
 from src.configurations import *
@@ -29,6 +30,10 @@ class Controller(Tk):
             self.views[view_name] = view
             view.grid(row = 0, column = 0, sticky = "nsew")
         self.show_view("MainView")
+
+        # Where to stored the thread
+        self.run_thread = Thread(target = self.run)
+        self.lock = Lock()
 
     def show_view(self, view_name : str):
         """ Show the actual view """
@@ -53,7 +58,7 @@ class Controller(Tk):
         """ get the number of batches """
         return self.model.processes.num_batches(self.model.batch)
 
-    def get_processes(self) -> [Process]:
+    def get_processes(self) -> ListProcesses:
         """ get the list of processes """
         return self.model.processes
 
@@ -61,11 +66,11 @@ class Controller(Tk):
         """ get current processes been executed """
         return self.model.current_process
 
-    def get_batch(self) -> [Process]:
+    def get_batch(self) -> Batch:
         """ get the actual batch """
         return self.model.batch
 
-    def get_finshed_processes(self) -> [Process]:
+    def get_finshed_processes(self) -> ListProcesses:
         """ get the finished processes """
         return self.model.finished_processes
 
@@ -117,49 +122,69 @@ class Controller(Tk):
         self.show_view("AnimationView")
 
 
-    def run(self):
-        """ Executes all  the processes batch by batch  """
-
+    def _run(self):
+        """Method to be executed in an thread"""
         self.model.batch_counter = 1
         # Until finshed with the pending batches
-        while self.get_num_processes() > 0:
+        while not self.model.processes.empty():
             # Load the batch
-            self.view.finished_processes_listbox.insert("", "end",
-                                                        values = (f"Batch: {self.model.batch_counter}", ))
+            self.view.finished_processes_table.add_message(f"Batch: {self.model.batch_counter}")
             self.model.batch_counter += 1
             self.model.processes.fill_batch(self.model.batch)
 
             self.view.update_num_pending_batches()
-            self.view.update_batch_listbox()
+            self.view.update_batch()
             sleep(1)
 
             # Execute processes one by one
             while not self.model.batch.empty():
                 self.model.current_process = self.model.batch.pop()
-                self.view.update_batch_listbox()
-                self.view.update_current_process_execution()
-
-                self.model.current_process.do_operation()
-
-                self.model.current_process.actual_time = 0
-                self.model.current_process.current_process.left_time = self.model.current_process.current_process.execution_time
-                while self.model.current_process.left_time > 0:
-                    self.view.update_current_process_execution()
-                    self.model.current_process.actual_time += 1
-                    self.model.current_process.left_time -= 1
-                    sleep(1)
-
+                process = self.model.current_process
+                self.view.update_batch()
                 self.view.update_current_process_execution()
                 sleep(1)
 
-                self.model.total_time += self.model.current_process.execution_time
+                process.do_operation()
+                process.actual_time = 0
+                process.left_time = process.time
+                while process.left_time > 0:
+                    self.model.current_process.actual_time += 1
+                    self.model.current_process.left_time -= 1
+                    self.view.update_current_process_execution()
+                    sleep(1)
+                    
+                self.model.total_time += process.time
                 self.view.update_counting_time()
 
                 # Append the process to the finsihed processes
-                self.model.finished_processes.add(self.model.current_process)
+                self.model.finished_processes.add(process)
 
                 self.model.current_process = None
                 self.view.update_current_process_execution()
                 self.view.update_finished_list()
 
                 sleep(1)
+
+    def run(self):
+        """Run all batches"""
+        self.model.batch_counter = 1
+        while not self.model.processes.empty():
+            # Load the batch
+            self.view.finished_processes_table.add_message(f"Batch: {self.model.batch_counter}")
+            self.model.batch_counter += 1
+            self.model.processes.fill_batch(self.model.batch)
+            sleep(1)
+            self.model.batch.run(self.model)
+            
+
+    def run_onclick(self):
+        """ Executes all  the processes batch by batch  """
+        self.run_thread.start()
+
+        while True:
+            sleep(1)
+            INFO(self.model.processes)
+            self.view.update_widgets()
+            if self.model.processes.empty():
+                break
+            self.model.total_time += 1

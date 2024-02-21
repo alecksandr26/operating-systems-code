@@ -1,9 +1,9 @@
 ---- 2024/02/19 ----
 - Restruture the app [X]
 - Remove the model class, instead create individual objects, Batch, ListProcess in the model.py [X]
-- Remove the unnecessary view hanlders functions and instead put the controller functions [ ]
+- Remove the unnecessary view hanlders functions and instead put the controller functions [X]
 - Divide each view class in simple and reusable compnentes, Build like the TableComponent, RunningProcess,
-  AddingProcess, etc. [ ]
+  AddingProcess, etc. [X]
 - Refresh the app each sleep and second but just the component, add flag called needs update or something like
   that [ ]
 - Build a thread for the run process of processes [ ]

@@ -4,14 +4,13 @@ Testing the app
 
 import sys
 
-from view import View, AnimationView
-from model import Model, Process
-from controller import Controller, INFO
-from configurations import *
+from src.view import View, AnimationView
+from src.model import Model, Process
+from src.controller import Controller, INFO
+from src.configurations import *
 
 import random
 import string
-
 
 def generate_random_string(length):
     """ generate random of strings """
@@ -28,13 +27,13 @@ def generate_random_process(num : int) -> Process:
     return process
 
 # The amount of processes to exected
-N = 30
+N = 10
 def main():
     """ The main function """
     controller = Controller()
 
     for i in range(1, N + 1):
-        controller.model.add_process(generate_random_process(i))
+        controller.model.processes.add(generate_random_process(i))
 
     controller.show_view("AnimationView")
     controller.mainloop()
