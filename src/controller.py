@@ -151,50 +151,6 @@ class Controller(Tk):
         # Move to the next view
         self.show_view("AnimationView")
 
-
-    def _run(self):
-        """ Old version of the code Method to be executed in an thread"""
-        self.model.batch_counter = 1
-        # Until finshed with the pending batches
-        while not self.model.processes.empty():
-            # Load the batch
-            self.view.finished_processes_table.add_message(f"Batch: {self.model.batch_counter}")
-            self.model.batch_counter += 1
-            self.model.processes.fill_batch(self.model.batch)
-
-            self.view.update_num_pending_batches()
-            self.view.update_batch()
-            sleep(1)
-
-            # Execute processes one by one
-            while not self.model.batch.empty():
-                self.model.current_process = self.model.batch.pop()
-                process = self.model.current_process
-                self.view.update_batch()
-                self.view.update_current_process_execution()
-                sleep(1)
-
-                process.do_operation()
-                process.actual_time = 0
-                process.left_time = process.time
-                while process.left_time > 0:
-                    self.model.current_process.actual_time += 1
-                    self.model.current_process.left_time -= 1
-                    self.view.update_current_process_execution()
-                    sleep(1)
-                    
-                self.model.total_time += process.time
-                self.view.update_counting_time()
-
-                # Append the process to the finsihed processes
-                self.model.finished_processes.add(process)
-
-                self.model.current_process = None
-                self.view.update_current_process_execution()
-                self.view.update_finished_list()
-
-                sleep(1)
-
     def run(self):
         """Run all batches"""
         self.model.batch_counter = 1
