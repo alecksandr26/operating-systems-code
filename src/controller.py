@@ -168,7 +168,8 @@ class Controller(Tk):
 
         for i in range(1, amount_processes + 1):
             self.model.processes.add(generate_random_process(i))
-        
+        INFO(self.model.processes)
+            
         # Move to the next view
         self.show_view("AnimationView")
 

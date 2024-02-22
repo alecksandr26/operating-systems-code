@@ -234,7 +234,7 @@ class ListProcesses:
         for pro in self._list[:3]:
             string += str(pro)
             if len(self._list) > 2:
-                string += ", "
+                string += ", ..."
         return string + "])"
 
 class Model:
