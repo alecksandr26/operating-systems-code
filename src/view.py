@@ -9,13 +9,14 @@ from tkinter import *
 from tkinter.ttk import *
 
 from src.configurations import *
+import pdb
 
 class TableGUIComponent:
     """A simple useful table component"""
     def __init__(self, parent, columns : [str], height : int = 8, anchor = CENTER):
         self._columns = [col.lower() for col in columns]
         self._height = height
-        
+        self._listobjs = []
         self._listbox = Treeview(
             parent, column = tuple([f"c{i}" for i in range(1, len(columns) + 1)]),
             show = "headings", height = height
@@ -42,23 +43,27 @@ class TableGUIComponent:
 
     def add(self, element : dict):
         """add a new element to the table """
+        vals = [element[key] for key in self._columns]
+        self._listobjs.append(vals)
         self._listbox.insert("", "end", f"{self._number_elements}",
-                             values = tuple([element[key] for key in self._columns]))
+                             values = vals)
         self._number_elements += 1
 
     def add_message(self, msg : str):
         """add a message in the current box"""
         self._listbox.insert("", "end", f"{self._number_elements}",
                              values = msg)
+        self._listobjs.append(msg)
         self._number_elements += 1
 
     def find(self, element : dict) -> int:
         """trys to find an element"""
         vals = [element[key] for key in self._columns]
         for item in self._listbox.get_children(""):
-            item_vals = self._listbox.item(item)["values"]
+            index = int(item)
+            item_vals = self._listobjs[index]
             if vals == item_vals:
-                return int(item)
+                return index
         return -1
 
     def delete(self, element : dict) -> int:
@@ -66,11 +71,13 @@ class TableGUIComponent:
         index = self.find(element)
         if index >= 0:
             self._listbox.delete(f"{index}")
+            del self._listobjs[index]
 
     def delete_all(self):
         """deletes all the elements in the table"""
         for item in self._listbox.get_children(""):
             self._listbox.delete(item)
+        self._listobjs.clear()
 
     def set_list(self, dict_list : [dict]):
         """sets a new list deleting the previous one"""
@@ -290,19 +297,18 @@ class AnimationView(View):
         self.update_current_process_execution()
         self.update_finished_list()
         self.update_counting_time()
+        self.refresh()
 
     def update_num_pending_batches(self):
         """ Update the pending batches """
         self.n_pending_processes_label.configure(
             text = f"No. Of pending batches:\t {self.controller.get_num_batches()}"
         )
-        self.refresh()
 
     def update_batch(self):
         """ Update the batch listbox """
         self.batch_table.set_list([pro.get_data() for pro in self.controller.get_batch()])
-        self.refresh()
-
+        
     def update_current_process_execution(self):
         """ update the current process execution """
         curr_pro = self.controller.get_cur_process()
@@ -311,13 +317,12 @@ class AnimationView(View):
                           "actual_time", "left_time"]
         if not curr_pro is None:
             self.current_process_table.set_list(
-                [{"info": key, "data": data} for key, data in curr_pro.get_data().items()]
+                [{"info": key, "data": curr_pro.get_data()[key]} for key in process_fields]
             )
         else:
             self.current_process_table.delete_all()
             for key in process_fields:
                 self.current_process_table.add({"info": key, "data": ""})
-        self.refresh()
 
 
     def update_finished_list(self):
@@ -327,11 +332,9 @@ class AnimationView(View):
             top_process = self.controller.get_finshed_processes().top()
             if self.finished_processes_table.find(top_process.get_data()) == -1:
                 self.finished_processes_table.add(top_process.get_data())
-        self.refresh()
-
+                
     def update_counting_time(self):
         """ update counting time """
         self.counting_time_label.configure(
             text = f"Total time:\t {self.controller.get_total_time()}"
         )
-        self.refresh()

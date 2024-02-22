@@ -4,6 +4,7 @@ Stores and Manages the data of the App
 import math
 from time import sleep
 from src.configurations import *
+from threading import Thread, Event
 
 # Object to represent the process
 class Process:
@@ -12,19 +13,25 @@ class Process:
         self.name = name
         self.num = program_num
         self.operation = ""
+        self.operation_sym = ""
         self.first_operand = 0
         self.second_operand = 0
         self.time = 0
         self.actual_time = 0
         self.left_time = 0
         self.result = 0
+        self.event_interrupt = None
+        self.event_pause = None
+        self.event_error = None
+        self.run_thread = None
 
-    def set_operation(self, operation : str, first_operand : int,
+    def set_operation(self, operation_sym : str, first_operand : int,
                       second_operand : int, time : int):
         """ set an operation """
-        self.operation = operation
+        self.operation_sym = operation_sym
         self.first_operand = first_operand
         self.second_operand = second_operand
+        self.operation = f"{first_operand} {operation_sym} {second_operand}"
         self.time = time
         self.actual_time = 0
         self.left_time = time
@@ -32,31 +39,55 @@ class Process:
 
     def do_operation(self):
         """ do the math genius """
-        if self.operation == "+":
+        if self.operation_sym == "+":
             self.result = self.first_operand + self.second_operand
-        elif self.operation == "-":
+        elif self.operation_sym == "-":
             self.result = self.first_operand - self.second_operand
-        elif self.operation == "*":
+        elif self.operation_sym == "*":
             self.result = self.first_operand * self.second_operand
-        elif self.operation == "/":
+        elif self.operation_sym == "/":
             self.result = self.first_operand / self.second_operand
-        elif self.operation == "%":
+        elif self.operation_sym == "%":
             self.result = self.first_operand % self.second_operand
-        elif self.operation == "^":
+        elif self.operation_sym == "^":
             self.result = self.first_operand ** self.second_operand
         else:
             assert 0, "Invalid operation genius chrashing.... XP"
 
-        # TODO: Make that the process individual spawn a thread
-        # And be capable in charge of its individual time
+    def create_thread(self):
+        """Creates a new thread"""
+        self.event_pause = Event()
+        self.event_interrupt = Event()
+        self.event_error = Event()
+        self.run_thread = Thread(target = self.run)
 
     def run(self):
         """Execute the process"""
-        self.do_operation()
-        self.actual_time = 0
-        self.left_time = self.time
+        # Here run the thread
+        try:
+            self.do_operation()
+        except:
+            INFO("Crashing.....")
+            self.result = "ERROR"
+            sleep(1)
+            return
+
         sleep(1)
         while self.left_time > 0:
+            while self.event_pause.is_set():
+                INFO("Sleeping.....")
+                sleep(1)
+            if self.event_interrupt.is_set():
+                INFO("Interrupting.....")
+                sleep(1)
+                break;
+            
+            if self.event_error.is_set():
+                INFO("Crashing.....")
+                self.result = "ERROR"
+                sleep(1)
+                break;
+            
             self.actual_time += 1
             self.left_time -= 1
             sleep(1)
@@ -66,6 +97,7 @@ class Process:
         data = {
             "num" : self.num,
             "name" : self.name,
+            "operation_sym" : self.operation_sym,
             "operation" : self.operation,
             "first_operand" : self.first_operand,
             "second_operand" : self.second_operand,
@@ -118,8 +150,14 @@ class Batch:
         """Run each process of the current batch until is empty"""
         while not self.empty():
             model.current_process = self.pop()
-            model.current_process.run()
-            model.finished_processes.add(model.current_process)
+            model.current_process.create_thread()
+            model.current_process.run_thread.start()
+            
+            # Wait for finish the thread
+            model.current_process.run_thread.join()
+            if not model.current_process.event_interrupt.is_set():
+                model.finished_processes.add(model.current_process)
+                
             model.current_process = None
             sleep(1)
 

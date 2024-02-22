@@ -7,7 +7,7 @@ from time import sleep
 from src.model import Model, Process, Batch, ListProcesses
 from src.view import MainView, AnimationView
 
-from threading import Thread, Lock
+from threading import Thread
 from tkinter import *
 from tkinter import messagebox
 from src.configurations import *
@@ -33,7 +33,37 @@ class Controller(Tk):
 
         # Where to stored the thread
         self.run_thread = Thread(target = self.run)
-        self.lock = Lock()
+        
+        # Keyboard events
+        self.bind("I", self._interruption_io_handler)
+        self.bind("P", self._pause_handler)
+        self.bind("C", self._continue_handler)
+        self.bind("E", self._error_hanlder)
+
+    def _error_hanlder(self, event):
+        """The hanlder of simulating an error"""
+        INFO("Error has been ocurred in the current process!!!")
+        if self.model.current_process is not None:
+            self.model.current_process.event_error.set()
+
+    def _interruption_io_handler(self, event):
+        """A handler of the interruption"""
+        INFO("Interrupting the current process!!!")
+        if self.model.current_process is not None:
+            self.model.current_process.event_interrupt.set()
+            self.model.batch.add(self.model.current_process)
+        
+    def _pause_handler(self, event):
+        """A handler of the interruption"""
+        INFO("Pausing the current process!!!")
+        if self.model.current_process is not None:
+            self.model.current_process.event_pause.set()
+            
+    def _continue_handler(self, event):
+        """A handler of the interruption"""
+        INFO("Continuing the current process!!!")
+        if self.model.current_process is not None and self.model.current_process.event_pause.is_set():
+            self.model.current_process.event_pause.clear()
 
     def show_view(self, view_name : str):
         """ Show the actual view """
@@ -77,7 +107,7 @@ class Controller(Tk):
     def get_total_time(self) -> int:
         """ get the total time of the processed """
         return self.model.total_time
-
+    
     def capture_process(self):
         """capture a new process to the list of processes."""
         process_data = {}
@@ -123,7 +153,7 @@ class Controller(Tk):
 
 
     def _run(self):
-        """Method to be executed in an thread"""
+        """ Old version of the code Method to be executed in an thread"""
         self.model.batch_counter = 1
         # Until finshed with the pending batches
         while not self.model.processes.empty():
@@ -173,7 +203,7 @@ class Controller(Tk):
             self.view.finished_processes_table.add_message(f"Batch: {self.model.batch_counter}")
             self.model.batch_counter += 1
             self.model.processes.fill_batch(self.model.batch)
-            sleep(1)
+            sleep(1.5)
             self.model.batch.run(self.model)
             
 
@@ -183,8 +213,8 @@ class Controller(Tk):
 
         while True:
             sleep(1)
-            INFO(self.model.processes)
             self.view.update_widgets()
-            if self.model.processes.empty():
+            # Wait until the thread is dead
+            if not self.run_thread.is_alive():
                 break
             self.model.total_time += 1
