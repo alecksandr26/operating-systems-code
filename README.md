@@ -7,7 +7,7 @@
 ```
 [term.]$ python -m unittest
 ```
-# How to run the script?
+# How to run the random generator script?
 ```
 [term.]$ python -m script
 ```
