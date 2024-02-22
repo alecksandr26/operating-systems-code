@@ -4,7 +4,7 @@ The configs of the project
 
 MAX_NUMBER_OF_PROCESS = 64
 MIN_NUMBER_OF_PROCESS = 1
-MAX_BATCH_CAPACITY = 4
+MAX_BATCH_CAPACITY = 3
 APP_TITLE = "Batch Processing Simulator in Python"
 APP_GEOMETRY = "300x100"
 OPERATIONS = ["+", "-", "*", "/", "%", "^"]

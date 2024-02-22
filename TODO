@@ -5,9 +5,9 @@
 - Divide each view class in simple and reusable compnentes, Build like the TableComponent, RunningProcess,
   AddingProcess, etc. [X]
 - Refresh the app each sleep and second but just the component, add flag called needs update or something like
-  that [ ]
-- Build a thread for the run process of processes [ ]
-- Add the keypress events that interact with the controller and the executed thread [ ]
+  that [X]
+- Build a thread for the run process of processes [X]
+- Add the keypress events that interact with the controller and the executed thread [X]
   solution: https://stackoverflow.com/questions/71524462/capture-all-keypresses-of-the-system-with-tkinter
 - Add more testcases to make the app more roboust [ ]
 
