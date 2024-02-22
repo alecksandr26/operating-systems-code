@@ -1,6 +1,15 @@
-# How to run
+# How to run the app?
 ```
-[term.]$ python -m src
+[term.]$ python main.py
+```
+
+# How to run the tests?
+```
+[term.]$ python -m unittest
+```
+# How to run the script?
+```
+[term.]$ python -m script
 ```
 
 # References
