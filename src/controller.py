@@ -4,8 +4,9 @@ The controller which controls the Model and the View part of the app
 
 from time import sleep
 
-from src.model import Model, Process, Batch, ListProcesses
-from src.view import MainView, AnimationView
+from .model import Model, Process, Batch, ListProcesses
+from .view import MainView, AnimationView, RandomNumView
+from .utils import generate_random_process
 
 from threading import Thread
 from tkinter import *
@@ -14,7 +15,7 @@ from src.configurations import *
 
 class Controller(Tk):
     """ The Controller where all the app is managed """
-    def __init__(self):
+    def __init__(self, default_view = "MainView"):
         super().__init__()
 
         self.title(APP_TITLE)
@@ -24,12 +25,12 @@ class Controller(Tk):
         self.model = Model()
         self.view = None
         self.views = {}
-        for F in (MainView, AnimationView, ):
+        for F in (MainView, AnimationView, RandomNumView ):
             view_name = F.__name__
             view = F(parent = self)
             self.views[view_name] = view
             view.grid(row = 0, column = 0, sticky = "nsew")
-        self.show_view("MainView")
+        self.show_view(default_view)
 
         # Where to stored the thread
         self.run_thread = Thread(target = self.run)
@@ -148,6 +149,26 @@ class Controller(Tk):
             messagebox.showerror("showerror", "Invalid number of introduced processes")
             return
 
+        # Move to the next view
+        self.show_view("AnimationView")
+
+
+    def gen_random_processes(self):
+        """It will genreate random processes"""
+        try:
+            amount_processes = int(self.view.spin_amount_processes.get())
+        except ValueError as error:
+            messagebox.showerror("showerror", f"Invalid number of introduced processes: {error}")
+            return
+
+        if amount_processes <= 0:
+            messagebox.showerror("showerror",
+                                 "Invalid number of introduced processes: can't be lesser or equal to zero")
+            return
+
+        for i in range(1, amount_processes + 1):
+            self.model.processes.add(generate_random_process(i))
+        
         # Move to the next view
         self.show_view("AnimationView")
 

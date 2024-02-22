@@ -119,6 +119,9 @@ class View(Frame):
         self.title_label = Label(self, text = APP_TITLE, font = ("Arial", 25))
         self.title_label.grid(row = 1, column = 1, columnspan = 7)
 
+        # Create the rest of parts of the view
+        self.build_widgets()
+
     @abstractmethod
     def build_widgets(self):
         """ Build the widgets needed for the View """       
@@ -137,7 +140,6 @@ class MainView(View):
     """ MainView The main menu of the application """
 
     def __init__(self, parent):
-        super().__init__(parent)
         self.spin_amount_processes = None
         self.number_processes_label = None
 
@@ -148,8 +150,8 @@ class MainView(View):
         self.spin_execution_time = None
         self.spin_proces_num = None
 
-        # Create the rest of parts of the view
-        self.build_widgets()
+        super().__init__(parent)
+
 
     def build_widgets(self):
         self.build_entry_number_processes_widget()
@@ -162,7 +164,6 @@ class MainView(View):
 
     def build_entry_number_processes_widget(self):
         """ build the first part of the """
-        # Set the input of the amount of processes
         Label(self, text = "No. Processes: ",
               font = ("Arial", 12)).grid(row = 2, column = 1, pady = 50)
         self.spin_amount_processes = Spinbox(self,
@@ -215,16 +216,13 @@ class AnimationView(View):
     """ The view with the animation """
 
     def __init__(self, parent):
-        super().__init__(parent)
         self.n_pending_processes_label = None
         self.batch_table = None
         self.current_process_table = None
         self.finished_processes_table = None
         self.counting_time_label = None
-        self.vsb = None
 
-        # Create the rest of parts of the view
-        self.build_widgets()
+        super().__init__(parent)
 
     def build_widgets(self):
         self.build_num_pending_batches()
@@ -338,3 +336,25 @@ class AnimationView(View):
         self.counting_time_label.configure(
             text = f"Total time:\t {self.controller.get_total_time()}"
         )
+
+class RandomNumView(View):
+    """The random processes menu generator"""
+    def __init__(self, parent):
+        super().__init__(parent)
+
+    def build_widgets(self):
+        """Build all the widgets"""
+        Label(self, text = "No. Processes: ",
+              font = ("Arial", 12)).grid(row = 2, column = 1, pady = 50)
+        self.spin_amount_processes = Spinbox(self,
+                                             from_ = MIN_NUMBER_OF_PROCESS,
+                                             to = MAX_NUMBER_OF_PROCESS,
+                                             width = 5)
+        self.spin_amount_processes.grid(row = 2, column = 2)
+        Button(
+            self, text = "Continue",
+            command = self.controller.gen_random_processes
+        ).grid(row = 3, column = 1, columnspan = 4)
+
+    def update_widgets(self):
+        """Update all the widgets, basically nothing for the moment"""
