@@ -2,14 +2,14 @@
 The main file for running the main program.
 """
 import sys
-from src.controller import Controller
+from src.controller import create_controller
 
 def main() -> int:
     """
     main: This function emulates the main c program function
     It will initialized the controller and run the other things
     """
-    controller = Controller("RandomNumView")
+    controller = create_controller("FCFS")
     controller.mainloop()
 
     return 0

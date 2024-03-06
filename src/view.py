@@ -339,9 +339,6 @@ class AnimationView(View):
 
 class RandomNumView(View):
     """The random processes menu generator"""
-    def __init__(self, parent):
-        super().__init__(parent)
-
     def build_widgets(self):
         """Build all the widgets"""
         Label(self, text = "No. Processes: ",
@@ -358,3 +355,85 @@ class RandomNumView(View):
 
     def update_widgets(self):
         """Update all the widgets, basically nothing for the moment"""
+
+
+class FCFSAnimationView(AnimationView):
+    """The View for the animation of the FCFS"""
+    def __init__(self, parent):
+        self.n_pending_processes_label = None
+        self.fcfs_ready = None
+        self.fcfs_cooldown = None
+        super().__init__(parent)
+        
+    def build_widgets(self):
+        """Build the widgets"""
+        self.build_num_pending_processes()
+        self.build_fcfs_ready()
+        
+        # Print the data of the process in execution
+        self.build_the_current_process_execution()
+
+        # Show another two lists with the actual processes and the finished ones
+        self.build_finished_list()
+
+        # Show the counter  and the button
+        self.build_counting_time()
+        self.build_the_run_button()
+
+        # Build the cooldown table
+        self.build_fcfs_cooldown()
+
+    def build_num_pending_processes(self):
+        """To build the counter of pending processes"""
+        self.n_pending_processes_label = Label(
+            self,
+            text = f"No. Of pending processes:\t {self.controller.get_num_processes()}",
+            font = ("Arial", 12)
+        )
+        self.n_pending_processes_label.grid(row = 2, column = 1, pady = 20)
+
+    def build_fcfs_ready(self):
+        """ build the batch list box """
+        Label(self, text = "FCFS Ready: ",
+              font = ("Arial", 12)).grid(row = 3, column = 1, pady = 20)
+        self.fcfs_ready = TableGUIComponent(
+            self, columns = ["Num", "Time", "Left_Time"]
+        )
+        self.fcfs_ready.grid(row = 4, column = 1, rowspan = 3)
+
+    def build_fcfs_cooldown(self):
+        """Build the table to represent the cooldown"""
+        Label(self, text = "FCFS CoolDown: ",
+              font = ("Arial", 12)).grid(row = 7, column = 2, pady = 20)
+        self.fcfs_cooldown = TableGUIComponent(
+            self, columns = ["Num", "CoolDown_Time"]
+        )
+        self.fcfs_cooldown.grid(row = 8, column = 2, rowspan = 3)
+
+    def update_widgets(self):
+        """To update the widgets"""
+        self.update_num_pending_processes()
+        self.update_fcfs_ready()
+        self.update_current_process_execution()
+        self.update_finished_list()
+        self.update_counting_time()
+        self.update_fcfs_cooldown()
+        self.refresh()
+
+    def update_num_pending_processes(self):
+        """To update the number of pending processes"""
+        self.n_pending_processes_label.configure(
+            text = f"No. Of pending processes:\t {self.controller.get_num_processes()}"
+        )
+
+    def update_fcfs_ready(self):
+        """ Update the batch listbox """
+        self.fcfs_ready.set_list([pro.get_data() for pro in self.controller.get_fcfs_mem()
+                                  if not pro.cooldown_status])
+
+    def update_fcfs_cooldown(self):
+        """Update fcfs cooldown"""
+        self.fcfs_cooldown.set_list([pro.get_data() for pro in self.controller.get_fcfs_mem()
+                                     if pro.cooldown_status])
+
+VIEWS_CLASSES = (MainView, AnimationView, RandomNumView, FCFSAnimationView, )
