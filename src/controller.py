@@ -113,6 +113,7 @@ class Controller(Tk):
             # Wait until the thread is dead
             if not self.thread.is_alive():
                 break
+            
             if not self.model.event_pause.is_set():
                 self.model.total_time += 1
                 

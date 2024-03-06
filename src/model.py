@@ -163,9 +163,13 @@ class FCFSProcess(Process):
 
     def cooldown(self):
         """Waits until the cooldown is zero"""
+        model = Model()
         while self.cooldown_time >= 0:
             sleep(1)
-            self.cooldown_time -= 1
+            
+            if not model.event_pause.is_set():
+                self.cooldown_time -= 1
+
         self.cooldown_status = False
 
     def set_cooldown(self):
