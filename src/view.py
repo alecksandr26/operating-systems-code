@@ -179,7 +179,7 @@ class MainView(View):
 
         Button(self, text = "Continue",
                command = self.controller.prepare_to_run).grid(row = 3,
-                                                           column = 1,
+                                                              column = 1,
                                                            columnspan = 4)
 
     def build_entry_process(self):
@@ -364,12 +364,12 @@ class FCFSAnimationView(AnimationView):
         self.fcfs_ready = None
         self.fcfs_cooldown = None
         super().__init__(parent)
-        
+
     def build_widgets(self):
         """Build the widgets"""
         self.build_num_pending_processes()
         self.build_fcfs_ready()
-        
+
         # Print the data of the process in execution
         self.build_the_current_process_execution()
 
@@ -382,6 +382,7 @@ class FCFSAnimationView(AnimationView):
 
         # Build the cooldown table
         self.build_fcfs_cooldown()
+        self.build_continue_button()
 
     def build_num_pending_processes(self):
         """To build the counter of pending processes"""
@@ -409,7 +410,13 @@ class FCFSAnimationView(AnimationView):
             self, columns = ["Num", "CoolDown_Time"]
         )
         self.fcfs_cooldown.grid(row = 8, column = 2, rowspan = 3)
-
+        
+    def build_continue_button(self):
+        """To move to the next view"""
+        Button(self, text = "Continue",
+               command = self.controller.move_to_finishing_table).grid(row = 9,
+                                                                       column = 1)
+        
     def update_widgets(self):
         """To update the widgets"""
         self.update_num_pending_processes()
@@ -436,4 +443,23 @@ class FCFSAnimationView(AnimationView):
         self.fcfs_cooldown.set_list([pro.get_data() for pro in self.controller.get_fcfs_mem()
                                      if pro.cooldown_status])
 
-VIEWS_CLASSES = (MainView, AnimationView, RandomNumView, FCFSAnimationView, )
+class FCFSFinishingView(View):
+    """Create the finalizing view"""
+    def __init__(self, parent):
+        self.info_table = None
+        super().__init__(parent)
+
+    def build_widgets(self):
+        """Build the widegets"""
+        Label(self, text = "Capturated Information: ",
+              font = ("Arial", 12)).grid(row = 3, column = 1, pady = 20)
+        self.info_table = TableGUIComponent(
+            self, columns = ["Num", "Arrive", "Finish", "Return", "Answer", "Wait", "Service"]
+        )
+        self.info_table.grid(row = 8, column = 1, rowspan = 3)
+
+    def update_widgets(self):
+        """Update the widgets"""
+        self.info_table.set_list([pro.get_data() for pro in self.controller.get_finshed_processes()])
+
+VIEWS_CLASSES = (MainView, AnimationView, RandomNumView, FCFSAnimationView, FCFSFinishingView, )

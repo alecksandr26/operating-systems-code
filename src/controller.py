@@ -284,6 +284,11 @@ class ControllerFCFS(Controller):
     def get_fcfs_mem(self) -> FCFSMem:
         """Returns the list of proceses of the queue"""
         return self.model.fcfs_mem
+    
+    def move_to_finishing_table(self):
+        """Move to the finishing table"""
+        if self.model.processes.empty():
+            self.show_view("FCFSFinishingView")
 
     def run(self):
         """Runs the fcfs simulation"""
@@ -296,7 +301,7 @@ class ControllerFCFS(Controller):
         while not self.model.processes.empty() or not self.model.fcfs_mem.empty():
             self.model.load_fcfs_mem()
             sleep(1)
-        
+            
 
 def create_controller(controller = "Batches") -> Controller:
     """To create an specific controller to deal with the view"""

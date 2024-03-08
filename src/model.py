@@ -132,6 +132,12 @@ class FCFSProcess(Process):
     """An FCFS process super important"""
     def __init__(self, name : str, program_num : int):
         self.cooldown_time = 0
+        self.arrive = -1
+        self.finish = -1
+        self.return_time = -1
+        self.ans_time = -1
+        self.wait_time = -1
+        self.service_time = 0
         self.cooldown_status = False
         self.cooldown_thread = None
         super().__init__(name, program_num)
@@ -155,7 +161,38 @@ class FCFSProcess(Process):
         dic = super().get_data()
         dic["cooldown_time"] = self.cooldown_time
         dic["cooldown_status"] = self.cooldown_status
+        dic["arrive"] = self.arrive
+        dic["finish"] = self.finish
+        dic["return"] = self.return_time
+        dic["answer"] = self.ans_time
+        dic["wait"] = self.wait_time
+        dic["service"] = self.service_time
         return dic
+
+    def set_arrive(self, time):
+        """To set teh arrive time of the process"""
+        self.arrive = time
+
+    def set_finish(self, time):
+        """To set the ending time of the process"""
+        self.finish = time
+        self.set_return_time(self.finish - self.arrive)
+
+    def set_return_time(self, time):
+        """To set the amount of time that takes the process on the system"""
+        self.return_time = time
+
+    def set_ans_time(self, time):
+        """To set the time that takes the system to attend the process"""
+        self.ans_time = time
+        
+    def set_wait_time(self, time):
+        """To set the waiting time until the process is attend"""
+        self.wait_time = time
+
+    def set_service_time(self, time):
+        """Set the service time the time that takes in the processor """
+        self.service_time += time
 
     def cooldown_is_set(self):
         """Retrns the satte of the cooldown"""
@@ -166,11 +203,12 @@ class FCFSProcess(Process):
         model = Model()
         while self.cooldown_time >= 0:
             sleep(1)
-            
             if not model.event_pause.is_set():
                 self.cooldown_time -= 1
+                model.fcfs_mem.add(model.fcfs_mem.pop(model.fcfs_mem.index(self)))
 
         self.cooldown_status = False
+
 
     def set_cooldown(self):
         """Sets the process in a cooldown"""
@@ -192,9 +230,13 @@ class ListProcesses:
         assert len(self._list) + 1 <= self._capacity, "Cna't add more processes"
         self._list.append(process)
 
-    def pop(self) -> Process:
+    def pop(self, i = 0) -> Process:
         """To remove the first element of the list"""
-        return self._list.pop(0)
+        return self._list.pop(i)
+
+    def index(self, pro : Process):
+        """Get the index of the process"""
+        return self._list.index(pro)
 
     def top(self) -> Process:
         """To know which is the top of the processes list"""
@@ -277,19 +319,27 @@ class FCFSMem(ListProcesses):
             model.current_process = self[0]
             if not model.current_process.cooldown_is_set():
                 model.current_process.prepare_to_run()
+                time_arrive_in_cpu = model.total_time
+                if model.current_process.wait_time == -1:
+                    model.current_process.set_wait_time(model.total_time)
+                if model.current_process.ans_time == -1:
+                    model.current_process.set_ans_time(model.total_time
+                                                       - model.current_process.arrive)
                 model.current_process.thread.start()
 
                 # Wait for finish the thread
                 ret = model.current_process.thread.join()
                 if not ret == INTERRUPTED_PROCESS:
-                    model.finished_processes.add(model.current_process)
-
+                    model.current_process.set_finish(model.total_time)
+                    model.finished_processes.add(model.current_process)                    
                     # Remove the first element to be able to set another element
                     self.pop()
                 else:
                     # Set the process in cooldown and push it back
                     model.current_process.set_cooldown()
                     self.add(self.pop())
+                    
+                model.current_process.set_service_time(model.total_time - time_arrive_in_cpu)
 
             model.current_process = None
             # Wait to add a new element if thats possible
@@ -329,4 +379,6 @@ class Model:
     def load_fcfs_mem(self):
         """Load the fcfs """
         while not self.processes.empty() and not self.fcfs_mem.fill():
-            self.fcfs_mem.add(self.processes.pop())
+            pro = self.processes.pop()
+            pro.set_arrive(self.total_time)
+            self.fcfs_mem.add(pro)
