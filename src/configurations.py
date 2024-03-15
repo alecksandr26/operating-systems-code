@@ -15,6 +15,14 @@ INTERRUPTED_PROCESS = 1
 CRASHED_PROCESS = 2
 COOLDOWN_TIME = 10
 
+# states of the processes
+class ProcessState:
+    NEW = "new"
+    READY = "ready"
+    EXECUTING = "executing"
+    FINISHED = "finished"
+    BLOCKED = "blocked"
+
 def INFO(*args):
     """A simple function to log information"""
     formatted_msg = "[INFO]: " + ' '.join(map(str, args))

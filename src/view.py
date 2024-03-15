@@ -413,9 +413,9 @@ class FCFSAnimationView(AnimationView):
         
     def build_continue_button(self):
         """To move to the next view"""
-        Button(self, text = "Continue",
-               command = self.controller.move_to_finishing_table).grid(row = 9,
-                                                                       column = 1)
+        Button(self, text = "BCP table",
+               command = self.controller.move_to_bcp_table).grid(row = 9,
+                                                                 column = 1)
         
     def update_widgets(self):
         """To update the widgets"""
@@ -443,7 +443,7 @@ class FCFSAnimationView(AnimationView):
         self.fcfs_cooldown.set_list([pro.get_data() for pro in self.controller.get_fcfs_mem()
                                      if pro.cooldown_status])
 
-class FCFSFinishingView(View):
+class FCFSBCPView(View):
     """Create the finalizing view"""
     def __init__(self, parent):
         self.info_table = None
@@ -454,12 +454,16 @@ class FCFSFinishingView(View):
         Label(self, text = "Capturated Information: ",
               font = ("Arial", 12)).grid(row = 3, column = 1, pady = 20)
         self.info_table = TableGUIComponent(
-            self, columns = ["Num", "Arrive", "Finish", "Return", "Answer", "Wait", "Service"]
+            self, columns = ["Num", "Operation_Res", "State", "Arrive", "Finish",
+                             "Return", "Answer", "Wait", "Service"]
         )
         self.info_table.grid(row = 8, column = 1, rowspan = 3)
+        Button(self, text = "Back",
+               command = self.controller.move_to_animation).grid(row = 13, column = 1, pady = 10)
+        
 
     def update_widgets(self):
         """Update the widgets"""
-        self.info_table.set_list([pro.get_data() for pro in self.controller.get_finshed_processes()])
+        self.info_table.set_list([pro.get_data() for pro in self.controller.get_total_process()])
 
-VIEWS_CLASSES = (MainView, AnimationView, RandomNumView, FCFSAnimationView, FCFSFinishingView, )
+VIEWS_CLASSES = (MainView, AnimationView, RandomNumView, FCFSAnimationView, FCFSBCPView, )

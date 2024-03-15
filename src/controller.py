@@ -30,14 +30,17 @@ class Controller(Tk):
         self.show_view(default_view)
 
         # Where to stored the thread
-        self.thread = Thread(target = self.run)
+        self.thread = None
+        self.thread_timer = None
         
         # Keyboard events
-        self.bind("I", self._interruption_io_handler)
+        self.bind("E", self._interruption_io_handler)
         self.bind("P", self._pause_handler)
         self.bind("C", self._resume_handler)
-        self.bind("E", self._error_hanlder)
-
+        self.bind("W", self._error_hanlder)
+        self.bind("B", self._show_processes_table)
+        self.bind("N", self._add_new_rand_process);
+        
     @abstractmethod
     def _error_hanlder(self, event):
         """The hanlder of simulating an error"""
@@ -50,6 +53,14 @@ class Controller(Tk):
     @abstractmethod
     def _resume_handler(self, event):
         """A handler of the interruption"""
+
+    @abstractmethod
+    def _show_processes_table(self, event):
+        """A handler of the shoing process of procesor"""
+
+    @abstractmethod
+    def _add_new_rand_process(self, event):
+        """Adds a new random process to the list of processes"""
 
     @abstractmethod
     def run(self):
@@ -103,10 +114,8 @@ class Controller(Tk):
                               process_data["execution_time"])
         self.model.processes.add(process)
 
-    def run_onclick(self):
-        """ Executes all  the processes batch by batch  """
-        self.thread.start()
-
+    def run_the_clock(self):
+        """Run the timer"""
         while True:
             self.view.update_widgets()
 
@@ -118,6 +127,16 @@ class Controller(Tk):
                 self.model.total_time += 1
                 
             sleep(1)
+
+    def run_onclick(self):
+        """ Executes all  the processes batch by batch  """
+        self.thread = Thread(target = self.run)
+        self.thread.start()
+        
+        self.thread_timer = Thread(target = self.run_the_clock)
+        self.thread_timer.start()
+
+        
 
 class ControllerBatches(Controller):
     """ The Controller where the initial backend will be managed"""
@@ -232,6 +251,7 @@ class ControllerFCFS(Controller):
     """This is the controller builds the simulation"""
     def __init__(self):
         super().__init__("RandomNumView")
+        self.amount_processes = -1
 
     def _error_hanlder(self, event):
         """The hanlder of simulating an error"""
@@ -257,26 +277,43 @@ class ControllerFCFS(Controller):
         if self.model.current_process is not None and self.model.event_pause.is_set():
             self.model.event_pause.clear()
 
+    def _show_processes_table(self, event):
+        """A handler of the shoing process of procesor"""
+        self.move_to_bcp_table()
+
+    def _add_new_rand_process(self, event):
+        """Adds a new random process to the list of processes"""
+        self.amount_processes += 1
+        process = generate_random_process(self.amount_processes)
+        fcfs_process = FCFSProcess(process.name, process.num)
+        fcfs_process.set_process(process)
+        self.model.processes.add(fcfs_process)
+        self.model.new_processes.add(fcfs_process)
+        self.view.update_widgets()
+        INFO("Added a new random process")
+
     def gen_random_processes(self):
         """It will genreate random processes"""
         try:
-            amount_processes = int(self.view.spin_amount_processes.get())
+            self.amount_processes = int(self.view.spin_amount_processes.get())
         except ValueError as error:
             messagebox.showerror("showerror", f"Invalid number of introduced processes: {error}")
             return
 
-        if amount_processes <= 0:
+        if self.amount_processes <= 0:
             messagebox.showerror("showerror",
                                  "Invalid number of introduced processes: can't be lesser or equal to zero")
             return
 
-        for i in range(1, amount_processes + 1):
+        for i in range(1, self.amount_processes + 1):
             process = generate_random_process(i)
             fcfs_process = FCFSProcess(process.name, process.num)
             fcfs_process.set_process(process)
             self.model.processes.add(fcfs_process)
+            self.model.new_processes.add(fcfs_process)
 
         INFO(self.model.processes)
+        INFO(self.model.new_processes)
 
         # Move to the next view
         self.show_view("FCFSAnimationView")
@@ -284,11 +321,31 @@ class ControllerFCFS(Controller):
     def get_fcfs_mem(self) -> FCFSMem:
         """Returns the list of proceses of the queue"""
         return self.model.fcfs_mem
+
+    def get_num_processes(self) -> int:
+        """ get the number of processes to be executed  """
+        return len(self.model.new_processes)
     
-    def move_to_finishing_table(self):
+    def move_to_bcp_table(self):
+        """Move to the bcp  table and pause the simulation"""
+
+        # Pause the simulation
+        if self.model.current_process is not None:
+            self.model.event_pause.set()
+        self.show_view("FCFSBCPView")
+
+    def get_total_process(self) -> ListProcesses:
+        """Get processes all processes"""
+        return self.model.processes
+
+    def move_to_animation(self):
         """Move to the finishing table"""
-        if self.model.processes.empty():
-            self.show_view("FCFSFinishingView")
+
+        # Unpaused the simulaion
+        if self.model.current_process is not None and self.model.event_pause.is_set():
+            self.model.event_pause.clear()
+
+        self.show_view("FCFSAnimationView")
 
     def run(self):
         """Runs the fcfs simulation"""
@@ -297,11 +354,11 @@ class ControllerFCFS(Controller):
         # Run the memory in another thread
         Thread(target = self.model.fcfs_mem.run).start()
         sleep(1)
-        
-        while not self.model.processes.empty() or not self.model.fcfs_mem.empty():
+
+        while not self.model.new_processes.empty() or not self.model.fcfs_mem.empty():
             self.model.load_fcfs_mem()
             sleep(1)
-            
+
 
 def create_controller(controller = "Batches") -> Controller:
     """To create an specific controller to deal with the view"""

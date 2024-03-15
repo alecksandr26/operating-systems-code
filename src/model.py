@@ -30,6 +30,7 @@ class Process:
         self.num = program_num
         self.operation = ""
         self.operation_sym = ""
+        self.operation_res = ""
         self.first_operand = 0
         self.second_operand = 0
         self.time = 0
@@ -66,6 +67,8 @@ class Process:
             self.result = self.first_operand ** self.second_operand
         else:
             assert 0, "Invalid operation genius chrashing.... XP"
+        self.operation_res = f"{self.first_operand} {self.operation_sym} {self.second_operand} = {self.result}"
+
 
     def prepare_to_run(self):
         """creates a new thread, and preperes to execute"""
@@ -80,6 +83,7 @@ class Process:
         except:
             INFO("Crashing.....")
             self.result = "ERROR"
+            self.operation_res = "ERROR"
             sleep(1)
             return CRASHED_PROCESS
 
@@ -97,6 +101,7 @@ class Process:
             if model.event_error.is_set():
                 INFO("Crashing.....")
                 self.result = "ERROR"
+                self.operation_res = "ERROR"
                 sleep(1)
                 return CRASHED_PROCESS
 
@@ -117,7 +122,8 @@ class Process:
             "second_operand" : self.second_operand,
             "time" : self.time,
             "actual_time" : self.actual_time,
-            "left_time" : self.left_time
+            "left_time" : self.left_time,
+            "operation_res" : self.operation_res
         }
 
         if hasattr(self, "result"):
@@ -140,6 +146,7 @@ class FCFSProcess(Process):
         self.service_time = 0
         self.cooldown_status = False
         self.cooldown_thread = None
+        self.state = ProcessState.NEW
         super().__init__(name, program_num)
 
     def set_process(self, process : Process):
@@ -167,6 +174,7 @@ class FCFSProcess(Process):
         dic["answer"] = self.ans_time
         dic["wait"] = self.wait_time
         dic["service"] = self.service_time
+        dic["state"] = self.state
         return dic
 
     def set_arrive(self, time):
@@ -207,8 +215,8 @@ class FCFSProcess(Process):
                 self.cooldown_time -= 1
                 model.fcfs_mem.add(model.fcfs_mem.pop(model.fcfs_mem.index(self)))
 
+        self.set_state(ProcessState.READY)
         self.cooldown_status = False
-
 
     def set_cooldown(self):
         """Sets the process in a cooldown"""
@@ -216,6 +224,14 @@ class FCFSProcess(Process):
         self.cooldown_status = True
         self.cooldown_thread = Thread(target = self.cooldown)
         self.cooldown_thread.start()
+
+    def set_state(self, state):
+        """To set the state to the process"""
+        self.state = state
+
+    def get_state(self):
+        """To set an state to the process"""
+        return self.state
 
 
 class ListProcesses:
@@ -318,29 +334,31 @@ class FCFSMem(ListProcesses):
             # Take the first element
             model.current_process = self[0]
             if not model.current_process.cooldown_is_set():
+                model.current_process.set_state(ProcessState.EXECUTING)
                 model.current_process.prepare_to_run()
                 time_arrive_in_cpu = model.total_time
                 if model.current_process.wait_time == -1:
                     model.current_process.set_wait_time(model.total_time)
                 if model.current_process.ans_time == -1:
                     model.current_process.set_ans_time(model.total_time
-                                                       - model.current_process.arrive)
+                                                       - model.current_process.arrive)                
+
                 model.current_process.thread.start()
 
                 # Wait for finish the thread
                 ret = model.current_process.thread.join()
                 if not ret == INTERRUPTED_PROCESS:
                     model.current_process.set_finish(model.total_time)
-                    model.finished_processes.add(model.current_process)                    
+                    model.current_process.set_state(ProcessState.FINISHED)
+                    model.finished_processes.add(model.current_process)               
                     # Remove the first element to be able to set another element
                     self.pop()
                 else:
                     # Set the process in cooldown and push it back
+                    model.current_process.set_state(ProcessState.BLOCKED)
                     model.current_process.set_cooldown()
-                    self.add(self.pop())
-                    
+                    self.add(self.pop())           
                 model.current_process.set_service_time(model.total_time - time_arrive_in_cpu)
-
             model.current_process = None
             # Wait to add a new element if thats possible
             sleep(1)
@@ -359,9 +377,10 @@ class Model:
             return
         # Build the list to handle the process
         self.processes = ListProcesses()
+        self.new_processes = ListProcesses()
+        self.finished_processes = ListProcesses()
         self.batch = Batch()
         self.fcfs_mem = FCFSMem()
-        self.finished_processes = ListProcesses()
         self.total_time = 0.0
         self.current_process = None
         self.batch_counter = 0
@@ -378,7 +397,9 @@ class Model:
 
     def load_fcfs_mem(self):
         """Load the fcfs """
-        while not self.processes.empty() and not self.fcfs_mem.fill():
-            pro = self.processes.pop()
+        while not self.new_processes.empty() and not self.fcfs_mem.fill():
+            INFO(self.new_processes.empty())
+            pro = self.new_processes.pop()
+            pro.set_state(ProcessState.READY)
             pro.set_arrive(self.total_time)
             self.fcfs_mem.add(pro)
