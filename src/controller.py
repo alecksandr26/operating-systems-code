@@ -5,7 +5,7 @@ The controller which controls the Model and the View part of the app
 from time import sleep
 from abc import abstractmethod
 
-from .model import Model, Process, Batch, ListProcesses, FCFSMem, FCFSProcess
+from .model import Model, Process, Batch, ListProcesses, FCFSMem, FCFSProcess, RRProcess
 from .view import VIEWS_CLASSES
 from .utils import generate_random_process
 
@@ -16,10 +16,11 @@ from src.configurations import *
 
 class Controller(Tk):
     """A simple abstract class where to use as base to create new backends"""
-    def __init__(self, default_view = "MainView"):
+    def __init__(self, controller_name : str, default_view = "MainView"):
         super().__init__()
         self.title(APP_TITLE)
         self.geometry(APP_GEOMETRY)
+        self.controller_name = controller_name
         
         INFO(default_view)
 
@@ -104,6 +105,10 @@ class Controller(Tk):
     def get_total_time(self) -> int:
         """ get the total time of the processed """
         return self.model.total_time
+    
+    def get_controller_name(self) -> str:
+        """Retruns the controller name"""
+        return self.controller_name
 
     def save_process(self, process_data : dict):
         """ Saving the process from data  """
@@ -140,6 +145,9 @@ class Controller(Tk):
 
 class ControllerBatches(Controller):
     """ The Controller where the initial backend will be managed"""
+    def __init__(self, default_view = "MainView"):
+        super().__init__("Batch", default_view)
+
     def _error_hanlder(self, event):
         """The hanlder of simulating an error"""
         if self.model.current_process is not None:
@@ -216,7 +224,8 @@ class ControllerBatches(Controller):
         self.model.batch_counter = 1
         while not self.model.processes.empty():
             # Load the batch
-            self.view.finished_processes_table.add_message(f"Batch: {self.model.batch_counter}")
+            self.view.finished_processes_table.\
+                add_message(f"{self.controller.get_controller_name()}: {self.model.batch_counter}")
             self.model.batch_counter += 1
             self.model.fill_batch()
             sleep(1.5)
@@ -249,8 +258,8 @@ class ControllerRandom(ControllerBatches):
 
 class ControllerFCFS(Controller):
     """This is the controller builds the simulation"""
-    def __init__(self):
-        super().__init__("RandomNumView")
+    def __init__(self, controller_name : str = "FCFS", default_init_view_name : str = "RandomNumView"):
+        super().__init__(controller_name, default_init_view_name)
         self.amount_processes = -1
 
     def _error_hanlder(self, event):
@@ -360,6 +369,66 @@ class ControllerFCFS(Controller):
             sleep(1)
 
 
+class ControllerRR(ControllerFCFS):
+    """The controller for the simulation of Round Robin algorithm"""
+    def __init__(self):        
+        self.quantum_val = MIN_QUANTUM_VAL
+        super().__init__("RR", default_init_view_name = "RandomNumViewAndQuantum")
+
+    def get_quantum(self):
+        """Get quantum value"""
+        return self.quantum_val
+
+    def _add_new_rand_process(self, event):
+        """Adds a new random process to the list of processes"""
+        self.amount_processes += 1
+        process = generate_random_process(self.amount_processes)
+        rr_process = RRProcess(process.name, process.num)
+        rr_process.set_process(process)
+        self.model.processes.add(rr_process)
+        self.model.new_processes.add(rr_process)
+        self.view.update_widgets()
+        INFO("Added a new random process")
+
+    def move_to_animation(self):
+        """Overides the previous move to the animation"""
+        
+        # Unpaused the simulaion
+        if self.model.current_process is not None and self.model.event_pause.is_set():
+            self.model.event_pause.clear()
+
+        self.show_view("RRAnimationView")
+
+
+    def gen_random_processes(self):
+        """It will genreate random processes"""
+        try:
+            self.amount_processes = int(self.view.spin_amount_processes.get())
+            self.quantum_val = int(self.view.spin_quantum.get())
+        except ValueError as error:
+            messagebox.showerror("showerror", f"Invalid number of introduced processes: {error}")
+            return
+
+        if self.amount_processes <= 0:
+            messagebox.showerror("showerror",
+                                 "Invalid number of introduced processes: can't be lesser or equal to zero")
+            return
+
+        for i in range(1, self.amount_processes + 1):
+            process = generate_random_process(i)
+            rr_process = RRProcess(process.name, process.num, self.quantum_val)
+            rr_process.set_process(process)
+            self.model.processes.add(rr_process)
+            self.model.new_processes.add(rr_process)
+
+        INFO(self.model.processes)
+        INFO(self.model.new_processes)
+
+        # Move to the next view
+        self.show_view("RRAnimationView")
+        
+        
+
 def create_controller(controller = "Batches") -> Controller:
     """To create an specific controller to deal with the view"""
     if controller == "Batches":
@@ -368,5 +437,7 @@ def create_controller(controller = "Batches") -> Controller:
         return ControllerRandom()
     elif controller == "FCFS":
         return ControllerFCFS()
+    elif controller == "RR":
+        return ControllerRR()
     
     assert 0, "Unknown controller my friend"

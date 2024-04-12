@@ -13,7 +13,7 @@ import pdb
 
 class TableGUIComponent:
     """A simple useful table component"""
-    def __init__(self, parent, columns : [str], height : int = 8, anchor = CENTER):
+    def __init__(self, parent, columns : [str], height : int = 10, anchor = CENTER):
         self._columns = [col.lower() for col in columns]
         self._height = height
         self._listobjs = []
@@ -106,7 +106,7 @@ class TableGUIComponent:
 
 class View(Frame):
     """ Base method to build views from it """
-    def __init__(self, parent):
+    def __init__(self, parent, name : str = APP_TITLE):
         super().__init__(parent)
 
         # The parent window is the controller
@@ -116,7 +116,7 @@ class View(Frame):
         self.place(x = 0, y = 0)
 
         # Set the main title
-        self.title_label = Label(self, text = APP_TITLE, font = ("Arial", 25))
+        self.title_label = Label(self, text = name, font = ("Arial", 25))
         self.title_label.grid(row = 1, column = 1, columnspan = 7)
 
         # Create the rest of parts of the view
@@ -221,6 +221,9 @@ class AnimationView(View):
         self.current_process_table = None
         self.finished_processes_table = None
         self.counting_time_label = None
+        self.process_fields = ["num", "name", "operation", "first_operand",
+                               "second_operand", "time",
+                               "actual_time", "left_time"]
 
         super().__init__(parent)
 
@@ -251,12 +254,12 @@ class AnimationView(View):
 
     def build_batch(self):
         """ build the batch list box """
-        Label(self, text = "Batch: ",
+        Label(self, text = f"{self.controller.get_controller_name()}: ",
               font = ("Arial", 12)).grid(row = 3, column = 1, pady = 20)
         self.batch_table = TableGUIComponent(
             self, columns = ["Num", "Time"]
         )
-        self.batch_table.grid(row = 4, column = 1, rowspan = 3)
+        self.batch_table.grid(row = 4, column = 1, rowspan = 4)
 
     def build_the_current_process_execution(self):
         """ build the gui of the process execution """
@@ -265,7 +268,7 @@ class AnimationView(View):
         self.current_process_table = TableGUIComponent(
             self, columns = ["Info", "Data"]
         )
-        self.current_process_table.grid(row = 4, column = 2, rowspan = 2, padx = 50)
+        self.current_process_table.grid(row = 4, column = 2, rowspan = 4, padx = 50)
 
     def build_finished_list(self):
         """ build  the gui of the finished list """
@@ -274,7 +277,7 @@ class AnimationView(View):
         self.finished_processes_table = TableGUIComponent(
             self, columns = ["Num", "Operation", "Result"]
         )
-        self.finished_processes_table.grid(row = 4, column = 3, rowspan = 3)
+        self.finished_processes_table.grid(row = 4, column = 3, rowspan = 4)
 
     def build_counting_time(self):
         """ build the counting time gui """
@@ -282,12 +285,12 @@ class AnimationView(View):
             self, text = f"Total time:\t {self.controller.get_total_time()}",
             font = ("Arial", 12)
         )
-        self.counting_time_label.grid(row = 7, column = 1, pady = 20)
+        self.counting_time_label.grid(row = 8, column = 1, pady = 20)
 
     def build_the_run_button(self):
         """ The gui of the run button """
         Button(self, text = "Run",
-               command = self.controller.run_onclick).grid(row = 8, column = 1)
+               command = self.controller.run_onclick).grid(row = 9, column = 1)
 
     def update_widgets(self):
         self.update_num_pending_batches()
@@ -310,16 +313,13 @@ class AnimationView(View):
     def update_current_process_execution(self):
         """ update the current process execution """
         curr_pro = self.controller.get_cur_process()
-        process_fields = ["num", "name", "operation", "first_operand",
-                          "second_operand", "time",
-                          "actual_time", "left_time"]
         if not curr_pro is None:
             self.current_process_table.set_list(
-                [{"info": key, "data": curr_pro.get_data()[key]} for key in process_fields]
+                [{"info": key, "data": curr_pro.get_data()[key]} for key in self.process_fields]
             )
         else:
             self.current_process_table.delete_all()
-            for key in process_fields:
+            for key in self.process_fields:
                 self.current_process_table.add({"info": key, "data": ""})
 
 
@@ -356,6 +356,36 @@ class RandomNumView(View):
     def update_widgets(self):
         """Update all the widgets, basically nothing for the moment"""
 
+
+class RandomNumViewAndQuantum(View):
+    """The random processes menu generator"""
+    def build_widgets(self):
+        """Build all the widgets"""
+        Label(self, text = "No. Processes: ",
+              font = ("Arial", 12)).grid(row = 2, column = 1, pady = 25)
+        self.spin_amount_processes = Spinbox(self,
+                                             from_ = MIN_NUMBER_OF_PROCESS,
+                                             to = MAX_NUMBER_OF_PROCESS,
+                                             width = 5)
+        self.spin_amount_processes.grid(row = 2, column = 2)
+        
+        Label(self, text = "Quantum: ",
+              font = ("Arial", 12)).grid(row = 3, column = 1, pady = 25)
+        
+        self.spin_quantum = Spinbox(self,
+                                    from_ = MIN_QUANTUM_VAL,
+                                    to = MAX_QUANTUM_VAL,
+                                    width = 5)
+        self.spin_quantum.grid(row = 3, column = 2)
+
+        Button(
+            self, text = "Continue",
+            command = self.controller.gen_random_processes
+        ).grid(row = 4, column = 1, columnspan = 4)
+        
+
+    def update_widgets(self):
+        """Update all the widgets, basically nothing for the moment"""
 
 class FCFSAnimationView(AnimationView):
     """The View for the animation of the FCFS"""
@@ -395,26 +425,26 @@ class FCFSAnimationView(AnimationView):
 
     def build_fcfs_ready(self):
         """ build the batch list box """
-        Label(self, text = "FCFS Ready: ",
+        Label(self, text = f"{self.controller.get_controller_name()} Ready: ",
               font = ("Arial", 12)).grid(row = 3, column = 1, pady = 20)
         self.fcfs_ready = TableGUIComponent(
             self, columns = ["Num", "Time", "Left_Time"]
         )
-        self.fcfs_ready.grid(row = 4, column = 1, rowspan = 3)
+        self.fcfs_ready.grid(row = 4, column = 1, rowspan = 4)
 
     def build_fcfs_cooldown(self):
         """Build the table to represent the cooldown"""
-        Label(self, text = "FCFS CoolDown: ",
-              font = ("Arial", 12)).grid(row = 7, column = 2, pady = 20)
+        Label(self, text = f"{self.controller.get_controller_name()} CoolDown: ",
+              font = ("Arial", 12)).grid(row = 8, column = 2, pady = 20)
         self.fcfs_cooldown = TableGUIComponent(
             self, columns = ["Num", "CoolDown_Time"]
         )
-        self.fcfs_cooldown.grid(row = 8, column = 2, rowspan = 3)
+        self.fcfs_cooldown.grid(row = 9, column = 2, rowspan = 4)
         
     def build_continue_button(self):
         """To move to the next view"""
         Button(self, text = "BCP table",
-               command = self.controller.move_to_bcp_table).grid(row = 9,
+               command = self.controller.move_to_bcp_table).grid(row = 10,
                                                                  column = 1)
         
     def update_widgets(self):
@@ -449,6 +479,7 @@ class FCFSBCPView(View):
         self.info_table = None
         super().__init__(parent)
 
+
     def build_widgets(self):
         """Build the widegets"""
         Label(self, text = "Capturated Information: ",
@@ -466,4 +497,35 @@ class FCFSBCPView(View):
         """Update the widgets"""
         self.info_table.set_list([pro.get_data() for pro in self.controller.get_total_process()])
 
-VIEWS_CLASSES = (MainView, AnimationView, RandomNumView, FCFSAnimationView, FCFSBCPView, )
+
+class RRAnimationView(FCFSAnimationView):
+    """The RR animation with a few changes"""
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.process_fields.append("quantum")
+        self.process_fields.append("elapsed_quantum")
+
+    def build_widgets(self):
+        """Overide the widgets"""
+        super().build_widgets()
+        self.build_num_quantum()
+
+
+    def build_num_quantum(self):
+        """Build a num quantum"""
+        Label(self, text = f"Quantum: {self.controller.get_quantum()}",
+              font = ("Arial", 12)).grid(row = 11, column = 1, pady = 20)
+
+    def update_widgets(self):
+        """Update the widgets"""
+        self.update_num_quantum()
+        super().update_widgets()
+
+
+    def update_num_quantum(self):
+        """Update num quantum"""
+        
+    
+
+VIEWS_CLASSES = (MainView, AnimationView, RandomNumView, FCFSAnimationView,
+                 FCFSBCPView, RandomNumViewAndQuantum, RRAnimationView, )

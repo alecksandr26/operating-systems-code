@@ -9,7 +9,7 @@ def main() -> int:
     main: This function emulates the main c program function
     It will initialized the controller and run the other things
     """
-    controller = create_controller("FCFS")
+    controller = create_controller("RR")
     controller.mainloop()
 
     return 0

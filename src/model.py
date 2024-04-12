@@ -234,6 +234,69 @@ class FCFSProcess(Process):
         return self.state
 
 
+class RRProcess(FCFSProcess):
+    """The RR process algorithm with a quantum"""
+    def __init__(self, name : str, program_num : int, quantum : int = MIN_QUANTUM_VAL):
+        self.quantum = quantum
+        self.elapsed_quantum = 0
+        super().__init__(name, program_num)
+
+    def get_quantum(self) -> int:
+        """To get the value of the quantum"""
+        return self.quantum
+    
+    def set_quantum(self, new_quantum):
+        """To set a new value of quantum"""
+        self.quantum = new_quantum
+
+    def get_data(self) -> dict:
+        """Gets the data from the process with the quantum"""
+        dic = super().get_data()
+        dic["quantum"] = self.quantum
+        dic["elapsed_quantum"] = self.elapsed_quantum
+        return dic
+
+        # Overide the run function
+    def run(self) -> int:
+        """Execute the process"""
+        # Here run the thread
+        model = Model()
+        try:
+            self.do_operation()
+        except:
+            INFO("Crashing.....")
+            self.result = "ERROR"
+            self.operation_res = "ERROR"
+            sleep(1)
+            return CRASHED_PROCESS
+        
+        self.elapsed_quantum = 0
+        sleep(1)
+        while self.left_time > 0 and self.quantum > self.elapsed_quantum:
+            while model.event_pause.is_set():
+                INFO("Sleeping.....")
+                sleep(1)
+
+            if model.event_interrupt.is_set():
+                INFO("Interrupting.....")
+                sleep(1)
+                return INTERRUPTED_PROCESS
+
+            if model.event_error.is_set():
+                INFO("Crashing.....")
+                self.result = "ERROR"
+                self.operation_res = "ERROR"
+                sleep(1)
+                return CRASHED_PROCESS
+
+            self.actual_time += 1
+            self.elapsed_quantum += 1
+            self.left_time -= 1
+            sleep(1)
+
+        return SUCCEEDED_PROCESS
+
+
 class ListProcesses:
     """A queue structure to contain all the processes"""
     def __init__(self, list_processes : [Process] = None, capacity : int = MAX_NUMBER_OF_PROCESS):
@@ -243,7 +306,7 @@ class ListProcesses:
 
     def add(self, process : Process):
         """Adds a new process to the be executed"""
-        assert len(self._list) + 1 <= self._capacity, "Cna't add more processes"
+        assert len(self._list) + 1 <= self._capacity, "Can't add more processes"
         self._list.append(process)
 
     def pop(self, i = 0) -> Process:
@@ -323,7 +386,7 @@ class Batch(ListProcesses):
             sleep(1)
 
 class FCFSMem(ListProcesses):
-    """A que structure to contain and to simulates the execution of processes"""
+    """A queue structure to contain and to simulates the execution of processes"""
     def __init__(self, capacity : int = MAX_FCFS_QUEUE_CAPACITY):
         super().__init__(capacity = capacity)
 
@@ -347,26 +410,32 @@ class FCFSMem(ListProcesses):
 
                 # Wait for finish the thread
                 ret = model.current_process.thread.join()
-                if not ret == INTERRUPTED_PROCESS:
+                if (ret == SUCCEEDED_PROCESS and model.current_process.left_time == 0) \
+                   or ret == CRASHED_PROCESS:
                     model.current_process.set_finish(model.total_time)
                     model.current_process.set_state(ProcessState.FINISHED)
                     model.finished_processes.add(model.current_process)               
                     # Remove the first element to be able to set another element
                     self.pop()
-                else:
+                elif ret == INTERRUPTED_PROCESS:
                     # Set the process in cooldown and push it back
                     model.current_process.set_state(ProcessState.BLOCKED)
                     model.current_process.set_cooldown()
-                    self.add(self.pop())           
+                    self.add(self.pop())
+                else:
+                    # Put it back
+                    self.add(self.pop())
                 model.current_process.set_service_time(model.total_time - time_arrive_in_cpu)
             model.current_process = None
             # Wait to add a new element if thats possible
             sleep(1)
+        
 
 class Model:
     """Where to store the values and datastructures and things"""
+    
+    # Making it a singleton class
     _instance = None
-
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
