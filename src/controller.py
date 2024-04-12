@@ -383,7 +383,7 @@ class ControllerRR(ControllerFCFS):
         """Adds a new random process to the list of processes"""
         self.amount_processes += 1
         process = generate_random_process(self.amount_processes)
-        rr_process = RRProcess(process.name, process.num)
+        rr_process = RRProcess(process.name, process.num, self.quantum_val)
         rr_process.set_process(process)
         self.model.processes.add(rr_process)
         self.model.new_processes.add(rr_process)
